@@ -1,15 +1,24 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "header/matriz.h"
+#include "header/construtiva.h"
 
 int main(){
 
-    int L, C;
+    int C, L, aux;
     scanf("%d", &L);
     scanf("%d", &C);
+   
+    aux = L*C;
 
-    int **matriz = criaMatriz(L, C);
+    int **matrizPDC = criaMatriz(aux, aux);
+    int **matrizSolucao = criaMatriz(aux, C);
 
-    povoarMatriz(matriz, L, C);
-    imprimirMatriz(matriz, L, C);
+    padronizarMatriz(matrizSolucao, L, C, 0);
+    padronizarMatriz(matrizPDC, aux, aux, -1);
+
+    solucaoSementeAleatoria(matrizSolucao, L, C);
+    lerArquivo(matrizPDC, aux, aux);
+    //imprimirMatriz(matrizSolucao, L, C);
+    //imprimirMatriz(matrizPDC, aux, aux);
 }
