@@ -20,7 +20,6 @@ int inserirSolucao(Solucao *lista, Solucao *solucao)
     printf("inserindo solução...\n");
     if (lista->prox == NULL)
     {
-
         lista->prox = solucao;
     }
     else
@@ -34,8 +33,9 @@ int inserirSolucao(Solucao *lista, Solucao *solucao)
         }
 
         aux->prox = solucao;
-        return 0;
+        
     }
+    return 0;
 }
 
 Solucao *criarSolucao(int id, int fo, int pl, int nc, int L, int C)

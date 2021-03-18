@@ -6,6 +6,16 @@
 
 #include <string>
 
+int numObj, numMoc;
+int vetValObj[MAX_OBJ];
+int vetPesObj[MAX_OBJ];
+int vetCapMoc[MAX_MOC];
+int vetIndObjOrd[MAX_OBJ];
+
+void lerDados(std::string arq);
+void testarDados(const char *arq);
+void ordenarObjetos();
+
 typedef struct tSolucao
 {
     int vetIdMocObj[MAX_OBJ];
@@ -13,6 +23,14 @@ typedef struct tSolucao
     int funObj;
 }Solucao;
 
+
+void calcularFO(Solucao &s);
+void construtivaAleatoria(Solucao &s);
+void construtivaGulosa(Solucao &s);
+void escreverSolucao(Solucao &s, const bool flag);
+
+//---------------ESTRUTUTA DE DADOS AUXILIARES----------
+//apenas para comparar as soluções
 typedef struct tSolucaoBIN
 {
     int vetObjetos[MAX_OBJ];
@@ -20,21 +38,15 @@ typedef struct tSolucaoBIN
     int funObj;
 }SolucaoBIN;
 
-
-int numObj, numMoc;
-int vetValObj[MAX_OBJ];
-int vetPesObj[MAX_OBJ];
-int vetCapMoc[MAX_MOC];
-
-
-void lerDados(std::string arq);
-void testarDados(const char *arq);
-
-void calcularFO(Solucao &s);
-void construtivaAleatoria(Solucao &s);
-void escreverSolucao(Solucao &s, const bool flag);
-
 void calcularFOBIN(SolucaoBIN &s);
 void construtivaAleatoriaBIN(SolucaoBIN &s);
 void escreverSolucaoBIN(SolucaoBIN &s, const bool flag);
+
+void testar_heuConstrutivas(std::string arq);
+void heuConAleGul(Solucao &s, const int percentual);
+
+
+
+
+
 #endif

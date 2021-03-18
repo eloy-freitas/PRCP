@@ -1,8 +1,8 @@
 #include <iostream>
 #include <time.h>
-#include <time.h>
 #include "pmm.hpp"
 #include <cstring>
+#include <memory.h>
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
@@ -10,15 +10,8 @@ using namespace std;
 int PESO = 100;
 int main(int argc, char *argv[])
 {
-
     srand(time(NULL));
-    SolucaoBIN sol;
-    lerDados(argv[1]);
-    testarDados("");
-    construtivaAleatoriaBIN(sol);
-    calcularFOBIN(sol);
-    escreverSolucaoBIN(sol, 1);
-
+    testar_heuConstrutivas(argv[1]);
     return 0;
 }
 
@@ -57,11 +50,72 @@ void testarDados(const char *arq)
         fclose(f);
 }
 
+void ordenarObjetos()
+{
+    int aux = 0;
+    for (int j = 0; j < numObj; j++)
+        vetIndObjOrd[j] = j;
+
+    for (int j = 1; j < numObj; j++)
+    {
+        for (int i = 0; i < numObj - 1; i++)
+        {
+            if ((double)vetValObj[vetIndObjOrd[i]] / vetPesObj[vetIndObjOrd[i]] <
+                (double)vetValObj[vetIndObjOrd[i + 1]] / vetPesObj[vetIndObjOrd[i + 1]])
+            {
+                aux = vetIndObjOrd[i];
+                vetIndObjOrd[i] = vetIndObjOrd[i + 1];
+                vetIndObjOrd[i + 1] = aux;
+            }
+        }
+    }
+}
+
+void construtivaGulosa(Solucao &s)
+{
+    memset(&s.vetPesMoc, 0, sizeof(s.vetPesMoc));
+    memset(&s.vetIdMocObj, -1, sizeof(s.vetIdMocObj));
+    for (int j = 0; j < numObj; j++)
+        for (int i = 0; i < numMoc; i++)
+            if (s.vetPesMoc[i] + vetPesObj[vetIndObjOrd[j]] <= vetCapMoc[i])
+            {
+                s.vetIdMocObj[vetIndObjOrd[j]] = i;
+                s.vetPesMoc[i] += vetPesObj[vetIndObjOrd[j]];
+                break;
+            }
+}
+
+void heuConAleGul(Solucao &s, const int percentual)
+{
+    int tam, pos, aux;
+    int vetAux[MAX_OBJ];
+    memcpy(&vetAux, &vetIndObjOrd, sizeof(vetIndObjOrd));
+    tam = MAX(1, (percentual / 100.0) * numObj);
+    for (int j = 0; j < tam; j++)
+    {
+        pos = j + rand() % (numObj - j);
+        aux = vetAux[pos];
+        vetAux[pos] = vetAux[j];
+        vetAux[j] = aux;
+    }
+    memset(&s.vetPesMoc, 0, sizeof(s.vetPesMoc));
+    memset(&s.vetIdMocObj, -1, sizeof(s.vetIdMocObj));
+    for (int j = 0; j < numObj; j++)
+        for (int i = 0; i < numMoc; i++)
+            if (s.vetPesMoc[i] + vetPesObj[vetAux[j]] <= vetCapMoc[i])
+            {
+                s.vetIdMocObj[vetAux[j]] = i;
+                s.vetPesMoc[i] += vetPesObj[vetAux[j]];
+                break;
+            }
+}
+
 /*INICIO MOCHILA MULTIPLA*/
 void calcularFO(Solucao &s)
 {
     memset(&s.vetPesMoc, 0, sizeof(s.vetPesMoc));
     s.funObj = 0;
+
     for (int i = 0; i < numObj; i++)
     {
         if (s.vetIdMocObj[i] != -1)
@@ -138,5 +192,43 @@ void construtivaAleatoriaBIN(SolucaoBIN &s)
         s.vetObjetos[i] = rand() % 2;
 }
 
-
 /*FIM MOCHILA BINARIA*/
+
+void testar_heuConstrutivas(string argv)
+{
+    Solucao sol;
+    clock_t h;
+    double tempo;
+    const int repeticoes = 1000;
+
+    lerDados(argv);
+    ordenarObjetos();
+    printf("\n\n>>> TESTE - HEURISTICAS CONSTRUTIVAS - %d - %d repetições\n", argv[1], repeticoes);
+
+     h = clock();
+    for (int r = 0; r < repeticoes; r++)
+        heuConAleGul(sol, 80);
+    calcularFO(sol);
+    h = clock() - h;
+    tempo = (double)h / CLOCKS_PER_SEC;
+    escreverSolucao(sol, 0);
+    printf("Construtiva Aleatória Gulosa...: %.10f seg.\n", tempo);
+
+    h = clock();
+    for (int r = 0; r < repeticoes; r++)
+        construtivaGulosa(sol);
+    calcularFO(sol);
+    h = clock() - h;
+    tempo = (double)h / CLOCKS_PER_SEC;
+    escreverSolucao(sol, 0);
+    printf("Construtiva Gulosa...: %.10f seg.\n", tempo);
+
+    h = clock();
+    for (int r = 0; r < repeticoes; r++)
+        construtivaAleatoria(sol);
+    calcularFO(sol);
+    h = clock() - h;
+    tempo = (double)h / CLOCKS_PER_SEC;
+    escreverSolucao(sol, 0);
+    printf("Construtiva Aleatória...: %.10f seg.\n", tempo);
+}

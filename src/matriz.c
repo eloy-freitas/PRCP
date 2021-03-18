@@ -11,23 +11,42 @@ int **criaMatriz(int L, int C)
     return M;
 }
 
-int lerArquivo(int **M, int L, int C)
+int **lerArquivo(int L, int C)
 {
+    int **M = criaMatriz(L * C, 1);
+    
     printf("lendo arquivo...\n");
-    int valor = 0, aux = 0, i = 0, j = 0, k = 0;
-
-    for (i = 0; i < L; i++)
+    int aux = 0;
+     printf("aqui");
+    for (int i = 0; i < L; i++)
     {
-        scanf("%d", &aux);
-        for (j = 0; j < aux; j++)
+       
+                scanf("%d", &aux);
+        aux++;
+       
+        M[i] = (int *)malloc(aux  * sizeof(int));
+        for (int j = 0; j < aux; j++)
         {
-
-            scanf("%d", &valor);
-
-            M[i][valor - 1] = valor - 1;
+            M[i][j] = aux - 1;
+            scanf("%d", &aux);
         }
     }
 
+    return M;
+}
+
+int imprimirMatrizDoArquivo(int **M, int L)
+{
+    int aux = 0;
+    for (int i = 0; i < L; i++)
+    {
+        aux = M[i][0];
+        for (int j = 1; j < aux; j++)
+        {
+            printf("%d\t", M[i][j]);
+        }
+        printf("\n");
+    }
     return 0;
 }
 
