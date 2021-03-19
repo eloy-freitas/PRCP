@@ -4,7 +4,7 @@
 #include <cstring>
 #include <memory.h>
 
-//#define MAX(X, Y) ((X > Y) ? X : Y)
+#define MAX(X, Y) ((X > Y) ? X : Y)
 using namespace std;
 
 int PESO = 100;
@@ -76,24 +76,23 @@ void escreverSolucao(Solucao &s, const bool flag)
 void calcularFO(Solucao &s)
 {
     s.funObj = 0;
+    s.conflitos = 0;
     auxiliar = 0;
-    auxiliar2 = 0;
     for (int i = 0; i < numObj; i++)
     {
         if (s.vetPosicoesEscolhidas[i] != -1)
         {
             auxiliar = (i * numMoc) + s.vetPosicoesEscolhidas[i];
-            //printf("\naux= %d; i = %d; posição= %d", auxiliar, i, s.vetPosicoesEscolhidas[i]);
-
             for (int j = 1; j < matConflitoPontos[auxiliar][0] + 1; j++)
-                if ((((double)(matConflitoPontos[auxiliar][j] - 1)/numMoc) - (matConflitoPontos[auxiliar][j]/numMoc)-1)*numMoc == s.vetPosicoesEscolhidas[(matConflitoPontos[auxiliar][j]/numMoc) - 1])
-                {
-                    auxiliar2++;
+            {
+                if (s.vetPosicoesEscolhidas[(matConflitoPontos[auxiliar][j] - 1) / numMoc] == (((double)(matConflitoPontos[auxiliar][j] - 1) / numMoc - (matConflitoPontos[auxiliar][j] - 1) / numMoc) * numMoc)){
+                    s.conflitos++;
+                }else{
+                    s.funObj++;
                 }
-            
+            }
         }
-        printf("aux2 = %d\n ", auxiliar2);
     }
-    /*for (int j = 0; j < numMoc; j++)
-        s.funObj -= PESO * MAX(0, s.vetPesMoc[j] - vetCapMoc[j]);*/
+   for (int j = 0; j < numMoc; j++)
+        s.funObj -= PESO * MAX(0, s.conflitos);
 }
