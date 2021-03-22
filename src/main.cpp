@@ -26,7 +26,7 @@ void lerDados(string arq)
     memset(&matConflitoPontos, -1, sizeof(matConflitoPontos));
 
     fscanf(f, "%d %d", &numObj, &numMoc);
-    for (int i = 0; i < numObj * numMoc; i++)
+    for (int i = 0; matConflitoPontos[i][0] == EOF; i++)
     {
         fscanf(f, "%d", &matConflitoPontos[i][0]);
         for (int j = 1; j < matConflitoPontos[i][0] + 1; j++)
@@ -44,7 +44,7 @@ void testarDados(const char *arq)
     else
         f = fopen(arq, "w");
     fprintf(f, "%d %d\n", numObj, numMoc);
-    for (int i = 0; i < numObj * numMoc; i++)
+    for (int i = 0; matConflitoPontos[i][0] != -1; i++)
     {
         for (int j = 1; j < matConflitoPontos[i][0] + 1; j++)
             fprintf(f, "%d ", matConflitoPontos[i][j]);
@@ -85,14 +85,21 @@ void calcularFO(Solucao &s)
             auxiliar = (i * numMoc) + s.vetPosicoesEscolhidas[i];
             for (int j = 1; j < matConflitoPontos[auxiliar][0] + 1; j++)
             {
-                if (s.vetPosicoesEscolhidas[(matConflitoPontos[auxiliar][j] - 1) / numMoc] == (((double)(matConflitoPontos[auxiliar][j] - 1) / numMoc - (matConflitoPontos[auxiliar][j] - 1) / numMoc) * numMoc)){
+                auxiliar2 = (matConflitoPontos[auxiliar][j] - 1) / numMoc;
+                if (s.vetPosicoesEscolhidas[auxiliar2] != -1 && s.vetPosicoesEscolhidas[auxiliar2] == (matConflitoPontos[auxiliar][j] - 1) % numMoc)
+                {
                     s.conflitos++;
-                }else{
-                    s.funObj++;
                 }
             }
         }
     }
-   for (int j = 0; j < numMoc; j++)
+
+    for (int i = 0; i < numObj; i++)
+        if (s.vetPosicoesEscolhidas[i] != -1)
+        {
+            s.funObj++;
+        }
+    printf("conflitos =  %d, fo= %d \n ", s.conflitos, s.funObj);
+    for (int j = 0; j < numMoc; j++)
         s.funObj -= PESO * MAX(0, s.conflitos);
 }
