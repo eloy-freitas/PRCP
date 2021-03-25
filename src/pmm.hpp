@@ -6,7 +6,7 @@
 
 #include <string>
 
-int numObj, numMoc, auxiliar, auxiliar2;
+int numObj, numMoc, auxiliar;
 int matConflitoPontos[MAX_OBJ][MAX_MOC];
 int vetIndObjOrd[MAX_OBJ];
 double vetPesObjOrd[MAX_OBJ];
@@ -14,6 +14,37 @@ double vetPesObjOrd[MAX_OBJ];
 void lerDados(std::string arq);
 void testarDados(const char *arq);
 
+typedef struct tSolucaoBIN
+{
+    int numObj;
+    int numMoc;
+    int conflitos;
+    int pontosLivres;
+    int vetPosicoesEscolhidas[MAX_OBJ];
+    int funObj;
+}SolucaoBIN;
+
+void criarVetAux();
+void clonarSolucao(SolucaoBIN &original, SolucaoBIN &clone);
+void lerSolucao(std::string arq);
+
+void bubbleSort();
+void selectionSort();
+void quickSort(int left, int right);
+void insertionSort();
+
+void calcularFOBIN(SolucaoBIN &s);
+void construtivaAleatoriaBIN(SolucaoBIN &s);
+void escreverSolucaoBIN(SolucaoBIN &s, const bool flag);
+
+void construtivaGulAle(SolucaoBIN &s, const int percentual);
+void construtivaGulosaBIN(SolucaoBIN &s);
+void testar_heuConstrutivas(std::string arq);
+
+#endif
+
+
+/*
 typedef struct tSolucao
 {
     int conflitos;
@@ -22,24 +53,8 @@ typedef struct tSolucao
     int funObj;
 }Solucao;
 
-typedef struct tSolucaoBIN
-{
-    int conflitos;
-    int pontosLivres;
-    int vetPosicoesEscolhidas[MAX_OBJ];
-    int funObj;
-}SolucaoBIN;
-
 void calcularFO(Solucao &s);
 void construtivaAleatoria(Solucao &s);
 void escreverSolucao(Solucao &s, const bool flag);
-
-void calcularFOBIN(SolucaoBIN &s);
-void construtivaAleatoriaBIN(SolucaoBIN &s);
-void escreverSolucaoBIN(SolucaoBIN &s, const bool flag);
-
-void ordenarObjetos();
 void construtivaGulosa(Solucao &s);
-void construtivaGulosaBIN(SolucaoBIN &s);
-
-#endif
+*/
