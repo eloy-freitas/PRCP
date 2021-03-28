@@ -54,6 +54,8 @@ void testarDados(const char *arq)
 
 void clonarSolucao(SolucaoBIN &original, SolucaoBIN &clone)
 {
+    clone.numObj = original.numObj;
+    clone.numMoc = original.numMoc;
     clone.funObj = original.funObj;
     clone.conflitos = original.conflitos;
     clone.pontosLivres = original.pontosLivres;
