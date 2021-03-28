@@ -11,7 +11,8 @@ int PESO = 100;
 int main(int argc, char *argv[])
 {
     srand(time(NULL));
-    testar_heuConstrutivas(argv[1]);
+    apresentacao(argv[1]);
+    //testar_heuConstrutivas(argv[1]);
     return 0;
 }
 
@@ -50,30 +51,30 @@ void testarDados(const char *arq)
         fclose(f);
 }
 
+void lerSolucao(SolucaoBIN &sol, string arq)
+{
 
-
-void lerSolucao(string arq){
-    SolucaoBIN sol;
-    memset(&sol.vetPosicoesEscolhidas, 0, sizeof(sol.vetPosicoesEscolhidas));
     FILE *f = fopen(arq.c_str(), "r");
-   
+    memset(&sol.vetPosicoesEscolhidas, 0, sizeof(sol.vetPosicoesEscolhidas));
     fscanf(f, "%d %d %d", &sol.numObj, &sol.numMoc, &sol.funObj);
-    for (int i = 0; auxiliar == EOF; i++)
+    for (int i = 0; i < (sol.numObj * sol.numMoc); i++)
     {
         fscanf(f, "%d", &auxiliar);
         sol.vetPosicoesEscolhidas[auxiliar] = 1;
-       
     }
+
     fclose(f);
+    sol.conflitos = MAX(0, (sol.numObj - sol.funObj));
+    sol.pontosLivres = sol.funObj;
 }
 
-void clonarSolucao(SolucaoBIN &original, SolucaoBIN &clone){
-   
+void clonarSolucao(SolucaoBIN &original, SolucaoBIN &clone)
+{
+
     clone.funObj = original.funObj;
     clone.conflitos = original.conflitos;
     clone.pontosLivres = original.pontosLivres;
     memcpy(&clone.vetPosicoesEscolhidas, &original.vetPosicoesEscolhidas, sizeof(original.vetPosicoesEscolhidas));
-
 }
 
 void criarVetAux()
@@ -303,7 +304,7 @@ void construtivaGulAle(SolucaoBIN &s, const int percentual)
 
 void escreverSolucaoBIN(SolucaoBIN &s, const bool flag)
 {
-    printf("\nFO: %d\n", s.funObj);
+    printf("FO: %d\n", s.funObj);
     printf("CONFLITOS: %d\n", s.conflitos);
     printf("PONTOS LIVRES: %d\n", s.pontosLivres);
     if (flag)
@@ -315,11 +316,29 @@ void escreverSolucaoBIN(SolucaoBIN &s, const bool flag)
     printf("\n");
 }
 
+void escreverSolucaoBINArquivo(SolucaoBIN &s, string arq)
+{
+    FILE *f;
+    const char *vazio = "";
+    if (arq == vazio)
+        f = stdout;
+    else
+        f = fopen(arq.c_str(), "w");
+    fprintf(f, "%d\n%d\n%d\n", s.numObj, s.numMoc, s.funObj);
+    for (int j = 0; j < s.numObj * s.numMoc; j++)
+        if (s.vetPosicoesEscolhidas[j] == 1)
+            fprintf(f, "%d\n", j + 1);
+
+    fclose(f);
+}
+
 void calcularFOBIN(SolucaoBIN &s)
 {
     s.conflitos = 0;
     s.funObj = 0;
     s.pontosLivres = 0;
+    s.numMoc = numMoc;
+    s.numObj = numObj;
     for (int i = 0; i < numObj * numMoc; i++)
         if (s.vetPosicoesEscolhidas[i] == 1)
         {
@@ -339,6 +358,61 @@ void calcularFOBIN(SolucaoBIN &s)
     s.funObj -= PESO * MAX(0, s.conflitos);
 }
 
+void apresentacao(string arq)
+{
+    SolucaoBIN sol;
+
+    clock_t h;
+    double tempo;
+    const int repeticoes = 1000;
+    //const int percentual = 50;
+    lerDados(arq);
+
+    cout << "\n>>> TESTE - HEURISTICAS CONSTRUTIVAS - " << arq << " - " << 1 << " REPETICOES \n";
+
+    //--
+    h = clock();
+    criarVetAux();
+   
+    quickSort(0, (numMoc * numObj));
+    
+    //insertionSort();
+    //selectionSort();
+    //bubbleSort();
+    construtivaGulosaBIN(sol);
+    h = clock() - h;
+    tempo = (double)h / CLOCKS_PER_SEC;
+    printf("\nTempo de cálculo da solução inicial...: %.5f seg.\n\n", tempo);
+
+    h = clock();
+    calcularFOBIN(sol);
+    escreverSolucaoBIN(sol, 0);
+    h = clock() - h;
+    tempo = (double)h / CLOCKS_PER_SEC;
+    printf("Tempo de cálculo da função objetivo...: %.5f seg.\n\n", tempo);
+
+    cout << "\n>>> TESTE - HEURISTICAS CONSTRUTIVAS - " << arq << " - " << repeticoes << " REPETICOES \n";
+    h = clock();
+    criarVetAux();
+    quickSort(0, (numMoc * numObj));
+    //insertionSort();
+    //selectionSort();
+    //bubbleSort();
+    for (int r = 0; r < repeticoes; r++)
+        construtivaGulosaBIN(sol);
+    h = clock() - h;
+    tempo = (double)h / CLOCKS_PER_SEC;
+    printf("\nTempo de cálculo da solução inicial...: %.5f seg.\n\n", tempo);
+
+    h = clock();
+    for (int r = 0; r < repeticoes; r++)
+        calcularFOBIN(sol);
+    escreverSolucaoBIN(sol, 0);
+    h = clock() - h;
+    tempo = (double)h / CLOCKS_PER_SEC;
+    printf("Tempo de cálculo da função objetivo...: %.5f seg.\n\n", tempo);
+}
+
 void testar_heuConstrutivas(string arq)
 {
     SolucaoBIN sol;
@@ -353,6 +427,9 @@ void testar_heuConstrutivas(string arq)
     //--
     h = clock();
     lerDados(arq);
+    sol.numObj = numObj;
+    sol.numMoc = numMoc;
+
     criarVetAux();
     h = clock() - h;
     tempo = (double)h / CLOCKS_PER_SEC;
@@ -360,12 +437,12 @@ void testar_heuConstrutivas(string arq)
 
     //--
     h = clock();
-    quickSort(0, (numMoc*numObj));
+    quickSort(0, (numMoc * numObj));
     h = clock() - h;
     tempo = (double)h / CLOCKS_PER_SEC;
     printf("Ordenação dos pesos por quick sort...: %.5f seg.\n", tempo);
 
-   /* //--
+    /* //--
     h = clock();
     insertionSort();
     h = clock() - h;

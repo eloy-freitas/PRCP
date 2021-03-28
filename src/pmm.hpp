@@ -22,7 +22,7 @@ typedef struct tSolucaoBIN
     int pontosLivres;
     int vetPosicoesEscolhidas[MAX_OBJ];
     int funObj;
-}SolucaoBIN;
+} SolucaoBIN;
 
 void criarVetAux();
 void clonarSolucao(SolucaoBIN &original, SolucaoBIN &clone);
@@ -33,16 +33,15 @@ void selectionSort();
 void quickSort(int left, int right);
 void insertionSort();
 
-void calcularFOBIN(SolucaoBIN &s);
-void construtivaAleatoriaBIN(SolucaoBIN &s);
 void escreverSolucaoBIN(SolucaoBIN &s, const bool flag);
+void escreverSolucaoBINArquivo(SolucaoBIN &s, std::string arq);
 
+void construtivaAleatoriaBIN(SolucaoBIN &s);
 void construtivaGulAle(SolucaoBIN &s, const int percentual);
 void construtivaGulosaBIN(SolucaoBIN &s);
 void testar_heuConstrutivas(std::string arq);
-
+void apresentacao(std::string arq);
 #endif
-
 
 /*
 typedef struct tSolucao
