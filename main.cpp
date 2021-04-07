@@ -13,13 +13,10 @@ int main(int argc, char *argv[])
     srand(time(NULL));
     lerDados(argv[1]);
     //testarDados("");
-    SolucaoBIN s;
-    //construtivaAleatoriaBIN(s);
-    criarVetAux();
-    selectionSort();
-    construtivaGulosaBIN(s);
-    calcularFOBIN(s);
-    escreverSolucaoBIN(s, "teste.txt", 0);
+    Solucao s;
+    construtivaAleatoria(s);
+    calcularFO(s);
+    escreverSolucao(s, 0);
     // apresentacao(argv[1]);
     //testar_heuConstrutivas(argv[1]);
 
@@ -61,11 +58,98 @@ void testarDados(const char *arq)
         fclose(f);
 }
 
+void construtivaAleatoria(Solucao &s)
+{
+    memset(&s.vetIdMocObj, -1, sizeof(s.vetIdMocObj));
+    for (int i = 0; i < numObj; i++)
+        s.vetIdMocObj[i] = (rand() % (numMoc + 1)) - 1;
+}
+
+void calcularFO(Solucao &s)
+{
+    s.funObj = 0;
+    s.conflitos = 0;
+    int aux1, aux2;
+    for (int i = 0; i < numObj; i++)
+    {
+        aux2 = 0;
+        if (s.vetIdMocObj[i] != -1)
+        {
+            aux1 = (i * numMoc) + s.vetIdMocObj[i];
+           
+            for (int j = 1; j < matConflitoPontos[aux1][0] + 1; j++)
+                //verifica se é uma posição candidata do mesmo ponto    &&    verifica se a posição que causa sobreescrita foi escolhida
+                if ((int)(matConflitoPontos[aux1][j] - 1) / numMoc != i && s.vetIdMocObj[(matConflitoPontos[aux1][j] - 1) / numMoc] == (numMoc - (matConflitoPontos[aux1][j] % numMoc)) - 1)
+                    aux2++;
+        }
+        if (aux2 > 0)
+            s.conflitos += aux2;
+        else
+            s.funObj++;
+    }
+    s.funObj -= PESO * MAX(0, s.conflitos);
+}
+
+void construtivaGulosa(Solucao &s)
+{
+    memset(&s.vetIdMocObj, 0, sizeof(s.vetIdMocObj));
+    int flag = 0;
+    int cont = 0;
+    int aux1, aux2;
+    for (int i = 0; i < numObj; i++)
+    {
+        if (s.vetIdMocObj[vetIndObjOrd[i]] == -1)
+            continue;
+        else
+        {
+            aux1 = (i * numMoc) + s.vetIdMocObj[i];
+
+            for (int j = 1; j < matConflitoPontos[vetIndObjOrd[aux1]][0] + 1; j++)
+                if (s.vetIdMocObj[matConflitoPontos[vetIndObjOrd[aux1]][j] - 1] != 1)
+                {
+                    cont++;
+                    flag = 1;
+                }
+                else
+                {
+                    flag = 0;
+                    cont = 0;
+                    break;
+                }
+
+            if (flag == 1 && cont == matConflitoPontos[vetIndObjOrd[i]][0])
+            {
+                for (int j = 1; j < matConflitoPontos[vetIndObjOrd[i]][0] + 1; j++)
+                    if (s.vetIdMocObj[matConflitoPontos[vetIndObjOrd[i]][j] - 1] == 0)
+                    {
+                        s.vetIdMocObj[matConflitoPontos[vetIndObjOrd[i]][j] - 1] = -1;
+                    }
+                s.vetIdMocObj[vetIndObjOrd[i]] = 1;
+            }
+        }
+        cont = 0;
+        flag = 0;
+    }
+}
+
+void escreverSolucao(Solucao &s, const bool flag)
+{
+    printf("\nFO: %d\n", s.funObj);
+    printf("CONFLITOS: %d\n", s.conflitos);
+    if (flag)
+    {
+        printf("VETOR POSIÇÕES ESCOLHIDAS: ");
+        for (int j = 0; j < numObj; j++)
+            printf("%d  ", s.vetIdMocObj[j]);
+    }
+    printf("\n");
+}
+
 void clonarSolucao(SolucaoBIN &original, SolucaoBIN &clone)
 {
     memcpy(&clone, &original, sizeof(original));
 }
-
+/*
 void criarVetAux()
 {
     for (int j = 0; j < (numObj * numMoc); j++)
@@ -307,7 +391,7 @@ void construtivaGulAle(SolucaoBIN &s, const int percentual)
     }
     printf("\n");
 }*/
-
+/*
 void escreverSolucaoBIN(SolucaoBIN &s, string arq, const bool flag)
 {
     FILE *f;
@@ -376,6 +460,8 @@ void lerSolucao(SolucaoBIN &sol, string arq)
 
     fclose(f);
 }
+*/
+
 /*
 void apresentacao(string arq)
 {
@@ -525,54 +611,9 @@ void construtivaGulosa(Solucao &s)
         }
     }
 }
-void construtivaAleatoria(Solucao &s)
-{
-    memset(&s.vetPosicoesEscolhidas, -1, sizeof(s.vetPosicoesEscolhidas));
-    for (int i = 0; i < numObj; i++)
-        s.vetPosicoesEscolhidas[i] = (rand() % (numMoc + 1)) - 1;
-}
 
-void escreverSolucao(Solucao &s, const bool flag)
-{
-    printf("\nFO: %d\n", s.funObj);
-    printf("CONFLITOS: %d\n", s.conflitos);
-    printf("PONTOS LIVRES: %d\n", s.pontosLivres);
-    if (flag)
-    {
-        printf("VETOR POSIÇÕES ESCOLHIDAS: ");
-        for (int j = 0; j < numObj; j++)
-            printf("%d  ", s.vetPosicoesEscolhidas[j]);
-    }
-    printf("\n");
-}
 
-void calcularFO(Solucao &s)
-{
-    s.funObj = 0;
-    s.conflitos = 0;
-    auxiliar = 0;
-    for (int i = 0; i < numObj; i++)
-    {
-        if (s.vetPosicoesEscolhidas[i] != -1)
-        {
-            auxiliar = (i * numMoc) + s.vetPosicoesEscolhidas[i];
-            for (int j = 1; j < matConflitoPontos[auxiliar][0] + 1; j++)
-            {
-                auxiliar2 = (matConflitoPontos[auxiliar][j] - 1) / numMoc;
-                if (s.vetPosicoesEscolhidas[auxiliar2] != -1 && s.vetPosicoesEscolhidas[auxiliar2] == (matConflitoPontos[auxiliar][j] - 1) % numMoc)
-                {
-                    s.conflitos++;
-                }
-            }
-        }
-    }
 
-    for (int i = 0; i < numObj; i++)
-        if (s.vetPosicoesEscolhidas[i] != -1)
-        {
-            s.funObj++;
-        }
-    s.pontosLivres = MAX(0, s.funObj - s.conflitos);
-    s.funObj -= PESO * MAX(0, s.conflitos);
-}
+
+
 */

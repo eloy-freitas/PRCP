@@ -43,7 +43,7 @@ void apresentacao(std::string arq);
 typedef struct tSolucao
 {
     int conflitos;
-    int vetPosicoesEscolhidas[MAX_OBJ];
+    int vetIdMocObj[MAX_OBJ];
     int funObj;
 }Solucao;
 
