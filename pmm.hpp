@@ -43,7 +43,7 @@ void heuBLPM(Solucao &s);
 void heuBLMM(Solucao &s);
 void heuBLRA(Solucao &s, const int iteracoes);
 
-void grasp(const int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total);
+void grasp(int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total);
 #endif
 /*
 typedef struct tSolucaoBIN

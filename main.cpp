@@ -37,7 +37,7 @@ int main(int argc, const char *argv[])
         grasp(lrc, tempo_limite, s, melhor_tempo, tempo_total);
         
         FILE *f = fopen(saida.c_str(),"at");
-        fprintf(f, "%s\t%d\t\t%d\t%d\t%.5f\t\t%.5f\n", aux.c_str(), seed, s.funObj, s.conflitos, melhor_tempo, tempo_total);
+        fprintf(f, "%s\t%d\t\t%d\t%d\t%d\t%.5f\t\t%.5f\n", aux.c_str(), seed, s.funObj, s.conflitos, lrc, melhor_tempo, tempo_total);
         fclose(f);
     }
 
@@ -220,9 +220,9 @@ void construtivaGulosaAleatoria(Solucao &s, const int lrc)
     }
 }
 
-void grasp(const int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total)
+void grasp(int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total)
 {
-    int aux = 1;
+    int aux;
     clock_t hI, hF;
     Solucao s_vizinha;
     printf("\n\n>>> EXECUTANDO O GRASP...\n\n");
@@ -233,16 +233,58 @@ void grasp(const int lrc, const double tempo_max, Solucao &s, double &tempo_melh
     {
         construtivaGulosaAleatoria(s_vizinha, lrc);
         calcularFO(s_vizinha);
-        aux += rand() % 3;
+        aux = rand() % 3;
         switch (aux)
         {
-        case 1:
+        case 0:
             heuBLPM(s_vizinha);
             break;
-        case 2:
+        case 1:
             heuBLMM(s_vizinha);
             break;
-        case 3:
+        case 2:
+            heuBLRA(s_vizinha, 100);
+            break;
+        default:
+            heuBLPM(s_vizinha);
+            break;
+        }
+
+        if (s_vizinha.funObj > s.funObj)
+        {
+            memcpy(&s, &s_vizinha, sizeof(s_vizinha));
+            hF = clock();
+            tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+        }
+        hF = clock();
+        tempo_total = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+    }
+}
+
+//lrc aleatorio
+/*void graspA(const int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total)
+{
+    int aux;
+    clock_t hI, hF;
+    Solucao s_vizinha;
+    printf("\n\n>>> EXECUTANDO O GRASP...\n\n");
+    tempo_total = tempo_melhor = 0;
+    hI = clock();
+    s.funObj = 0;
+    while (tempo_total < tempo_max)
+    {
+        construtivaGulosaAleatoria(s_vizinha, lrc);
+        calcularFO(s_vizinha);
+        aux = rand() % 3;
+        switch (aux)
+        {
+        case 0:
+            heuBLPM(s_vizinha);
+            break;
+        case 1:
+            heuBLMM(s_vizinha);
+            break;
+        case 2:
             heuBLRA(s_vizinha, 100);
             break;
         default:
@@ -262,7 +304,7 @@ void grasp(const int lrc, const double tempo_max, Solucao &s, double &tempo_melh
         aux = 1;
     }
 }
-
+*/
 void heuBLPM(Solucao &s)
 {
     int vetObjAux[MAX_OBJ]; // usado para evitar determinismo na ordem de teste dos objetos
@@ -276,7 +318,7 @@ INICIO:;
     {
         indice = j + rand() % (pontos - j);
         mocOri = s.vetPosSel[vetObjAux[indice]];
-        for (int i = -1; i < posicoes; i++)
+        for (int i = 1; i < posicoes + 1; i++)
         {
             if (i != mocOri)
             {
@@ -313,7 +355,7 @@ void heuBLMM(Solucao &s)
         for (int j = 0; j < pontos; j++)
         {
             mocOri = s.vetPosSel[j];
-            for (int i = -1; i < posicoes; i++)
+            for (int i = 0; i < posicoes + 1; i++)
             {
                 if (i != mocOri)
                 {
