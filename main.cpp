@@ -10,20 +10,36 @@ using namespace std;
 int PESO = 100;
 int main(int argc, const char *argv[])
 {
-    argc = 1;
-    srand(time(NULL));
-    lerDados(argv[1]);
-    //testarDados("");
+    int seed = 0, lrc;
+    string instancia = "", saida = "", aux = "GRASP";
+    double tempo, tempo_limite = 5, melhor_tempo, tempo_total;
     Solucao s;
-    
-    construtivaAleatoria(s);
-    calcularFO(s);
-    escreverSolucao(s, "", 0);
- 
-   
-    lerSolucao(s, argv[2]);
-    calcularFO(s);
-    escreverSolucao(s, "", 0);
+    clock_t h;
+
+    if (argc > 1)
+    {
+        seed = stoi(argv[1]);
+        instancia = argv[2];
+        tempo_limite = stof(argv[3]);
+        saida = argv[4];
+        lrc = stoi(argv[5]);
+        srand(seed);
+
+        lerDados(instancia);
+        h = clock();
+        criarVetPosicoesCandidatas();
+        criarVetAuxiliares();
+        selectionSort();
+        h = clock() - h;
+        tempo = (double)h / CLOCKS_PER_SEC;
+        printf("Tempo de pré-processamento...: %.5f seg.\n\n", tempo);
+
+        grasp(lrc, tempo_limite, s, melhor_tempo, tempo_total);
+        
+        FILE *f = fopen(saida.c_str(),"at");
+        fprintf(f, "%s\t%d\t\t%d\t%d\t%.5f\t\t%.5f\n", aux.c_str(), seed, s.funObj, s.conflitos, melhor_tempo, tempo_total);
+        fclose(f);
+    }
 
     return 0;
 }
@@ -32,12 +48,13 @@ void lerDados(string arq)
 {
     FILE *f = fopen(arq.c_str(), "r");
     memset(&matConflitoPontos, -1, sizeof(matConflitoPontos));
-
+    memset(&vetConflitosPosicao, 0, sizeof(vetConflitosPosicao));
     fscanf(f, "%d %d", &pontos, &posicoes);
-    for (int i = 0; matConflitoPontos[i][0] == EOF; i++)
+    for (int i = 0; i < (pontos * posicoes) * 2; i++)
     {
-        fscanf(f, "%d", &matConflitoPontos[i][0]);
-        for (int j = 1; j < matConflitoPontos[i][0] + 1; j++)
+        fscanf(f, "%d", &vetConflitosPosicao[i]);
+
+        for (int j = 0; j < vetConflitosPosicao[i]; j++)
             fscanf(f, "%d", &matConflitoPontos[i][j]);
     }
     fclose(f);
@@ -54,7 +71,7 @@ void testarDados(const char *arq)
     fprintf(f, "%d %d\n", pontos, posicoes);
     for (int i = 0; i < pontos * posicoes; i++)
     {
-        for (int j = 1; j < matConflitoPontos[i][0] + 1; j++)
+        for (int j = 0; j < vetConflitosPosicao[i]; j++)
             fprintf(f, "%d ", matConflitoPontos[i][j]);
         fprintf(f, "\n");
     }
@@ -94,71 +111,271 @@ void calcularFO(Solucao &s)
     s.funObj = pontos;
     s.conflitos = 0;
     int candidato, conflitos;
-    criarVetPosicoesCandidatas();
+
     for (int i = 0; i < pontos; i++)
     {
         candidato = (i * posicoes) + (s.vetPosSel[i] - 1);
         conflitos = 0;
-        for (int j = 1; j < matConflitoPontos[candidato][0] + 1; j++)
-            if (vetPosicoesCandidatas[matConflitoPontos[candidato][j] - 1] != -1 && vetPosicoesCandidatas[matConflitoPontos[candidato][j] - 1] == s.vetPosSel[(matConflitoPontos[candidato][j] - 1) / posicoes])
+        for (int j = 0; j < vetConflitosPosicao[candidato]; j++)
+            if (vetPosicoesCandidatas[matConflitoPontos[candidato][j] - 1] == s.vetPosSel[(matConflitoPontos[candidato][j] - 1) / posicoes])
                 conflitos++;
 
-        s.conflitos += conflitos;   
-        vetPosicoesCandidatas[candidato] = -1;
+        s.conflitos += conflitos;
+        if (conflitos > 0)
+            s.funObj--;
     }
-    if(s.conflitos > 0)
-         s.funObj -= s.conflitos + 1;
-    
+    s.conflitos /= 2;
 }
 
-
-/*
 void construtivaGulosa(Solucao &s)
 {
     memset(&s.vetPosSel, 0, sizeof(s.vetPosSel));
     int flag = 0;
     int cont = 0;
-    int aux1, aux2;
-    for (int i = 0; i < pontos; i++)
-    {
-        if (s.vetPosSel[vetIndObjOrd[i]] != -1)
-            continue;
-        else
-        {
-            aux1 = (vetIndObjOrd[i] * posicoes);
+    int candidatos = 0;
 
-            for (int k = aux1; k < aux1 + posicoes; k++)
+    for (int i = 0; i < pontos * posicoes; i++)
+    {
+        if (s.vetPosSel[vetIndPosicoesOrd[i] / posicoes] == 0 && vetIndPosicoesOrd[i] != -1)
+        {
+            for (int k = 0; k < vetConflitosPosicaoOrd[vetIndPosicoesOrd[i]]; k++)
             {
-                for (int j = 1; j < matConflitoPontos[k][0] + 1; j++)
-                    if ((int)(matConflitoPontos[aux1][j] - 1) / posicoes != aux1 && )
-                    {
-                        cont++;
-                        flag = 1;
-                        aux2 = k;
-                    }
-                    else
-                    {
-                        flag = 0;
-                        cont = 0;
-                        break;
-                    }
+                if (vetPosicoesCandidatas[matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1] != s.vetPosSel[(matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1) / posicoes])
+                {
+                    cont++;
+                    flag = 1;
+                }
+                else
+                {
+                    flag = 0;
+                    cont = 0;
+                    break;
+                }
             }
 
-            if (flag == 1 && cont == matConflitoPontos[aux1][0])
+            if (flag == 1 && cont == vetConflitosPosicaoOrd[vetIndPosicoesOrd[i]])
             {
-                for (int j = 1; j < matConflitoPontos[aux1][0] + 1; j++)
-                    if (s.vetPosSel[(matConflitoPontos[aux1][j] - 1) / posicoes] < 0)
-                    {
-                        s.vetPosSel[(matConflitoPontos[aux1][j] - 1) / posicoes1] = -2;
-                    }
-                s.vetPosSel[vetIndObjOrd[i]] = ;
+                for (int k = 0; k < vetConflitosPosicaoOrd[vetIndPosicoesOrd[i]]; k++)
+                    vetIndPosicoesOrd[matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1] = -1;
+
+                s.vetPosSel[vetIndPosicoesOrd[i] / posicoes] = vetPosicoesCandidatas[i];
+                candidatos++;
             }
         }
         cont = 0;
         flag = 0;
     }
 }
-*/
+
+void construtivaGulosaAleatoria(Solucao &s, const int lrc)
+{
+    memset(&s.vetPosSel, 0, sizeof(s.vetPosSel));
+    int flag = 0;
+    int cont = 0;
+    int candidatos = 0;
+    int tam, pos, aux;
+    int vetAux[MAX_OBJ * MAX_MOC];
+    double aux1;
+    memcpy(&vetAux, &vetIndPosicoesOrd, sizeof(vetIndPosicoesOrd));
+    tam = MAX(1, (lrc / 100.0) * pontos);
+    for (int j = 0; j < tam; j++)
+    {
+        pos = j + rand() % (pontos - j);
+        aux = vetAux[pos];
+        vetAux[pos] = vetAux[j];
+        vetAux[j] = aux;
+
+        aux1 = vetConflitosPosicaoOrd[pos];
+        vetConflitosPosicaoOrd[pos] = vetConflitosPosicaoOrd[j];
+        vetConflitosPosicaoOrd[j] = aux1;
+    }
+
+    for (int i = 0; i < pontos * posicoes; i++)
+    {
+        if (s.vetPosSel[vetAux[i] / posicoes] == 0 && vetAux[i] != -1)
+        {
+            for (int k = 0; k < vetConflitosPosicaoOrd[vetAux[i]]; k++)
+            {
+                if (vetPosicoesCandidatas[matConflitoPontos[vetAux[i]][k] - 1] != s.vetPosSel[(matConflitoPontos[vetAux[i]][k] - 1) / posicoes])
+                {
+                    cont++;
+                    flag = 1;
+                }
+                else
+                {
+                    flag = 0;
+                    cont = 0;
+                    break;
+                }
+            }
+
+            if (flag == 1 && cont == vetConflitosPosicaoOrd[vetAux[i]])
+            {
+                s.vetPosSel[vetAux[i] / posicoes] = vetPosicoesCandidatas[i];
+                candidatos++;
+            }
+        }
+        cont = 0;
+        flag = 0;
+    }
+}
+
+void grasp(const int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total)
+{
+    int aux = 1;
+    clock_t hI, hF;
+    Solucao s_vizinha;
+    printf("\n\n>>> EXECUTANDO O GRASP...\n\n");
+    tempo_total = tempo_melhor = 0;
+    hI = clock();
+    s.funObj = 0;
+    while (tempo_total < tempo_max)
+    {
+        construtivaGulosaAleatoria(s_vizinha, lrc);
+        calcularFO(s_vizinha);
+        aux += rand() % 3;
+        switch (aux)
+        {
+        case 1:
+            heuBLPM(s_vizinha);
+            break;
+        case 2:
+            heuBLMM(s_vizinha);
+            break;
+        case 3:
+            heuBLRA(s_vizinha, 100);
+            break;
+        default:
+            heuBLPM(s_vizinha);
+            break;
+        }
+
+        if (s_vizinha.funObj > s.funObj)
+        {
+            memcpy(&s, &s_vizinha, sizeof(s_vizinha));
+            hF = clock();
+            tempo_melhor = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+        }
+        hF = clock();
+        tempo_total = ((double)(hF - hI)) / CLOCKS_PER_SEC;
+
+        aux = 1;
+    }
+}
+
+void heuBLPM(Solucao &s)
+{
+    int vetObjAux[MAX_OBJ]; // usado para evitar determinismo na ordem de teste dos objetos
+    int mocOri, foOri, indice, aux;
+    int melFO = s.funObj;
+    for (int j = 0; j < pontos; j++)
+        vetObjAux[j] = j;
+INICIO:;
+    foOri = s.funObj;
+    for (int j = 0; j < pontos; j++)
+    {
+        indice = j + rand() % (pontos - j);
+        mocOri = s.vetPosSel[vetObjAux[indice]];
+        for (int i = -1; i < posicoes; i++)
+        {
+            if (i != mocOri)
+            {
+                s.vetPosSel[vetObjAux[indice]] = i;
+                calcularFO(s);
+                if (s.funObj > melFO)
+                {
+                    melFO = s.funObj;
+
+                    goto INICIO;
+                }
+                else
+                {
+                    s.vetPosSel[vetObjAux[indice]] = mocOri;
+                    s.funObj = foOri;
+                }
+            }
+        }
+        aux = vetObjAux[j];
+        vetObjAux[j] = vetObjAux[indice];
+        vetObjAux[indice] = aux;
+    }
+    calcularFO(s);
+}
+
+void heuBLMM(Solucao &s)
+{
+    int mocOri, foOri, melObj, melMoc, flag;
+    int melFO = s.funObj;
+    while (true)
+    {
+        flag = 0;
+        foOri = s.funObj;
+        for (int j = 0; j < pontos; j++)
+        {
+            mocOri = s.vetPosSel[j];
+            for (int i = -1; i < posicoes; i++)
+            {
+                if (i != mocOri)
+                {
+                    s.vetPosSel[j] = i;
+                    calcularFO(s);
+                    if (s.funObj > melFO)
+                    {
+                        melFO = s.funObj;
+                        melObj = j;
+                        melMoc = i;
+                        flag = 1;
+                    }
+                }
+            }
+            s.vetPosSel[j] = mocOri;
+            s.funObj = foOri;
+        }
+        if (flag)
+        {
+            s.vetPosSel[melObj] = melMoc;
+            s.funObj = melFO;
+        }
+        else
+            break;
+    }
+    calcularFO(s);
+}
+
+void heuBLRA(Solucao &s, const int iteracoes)
+{
+    int obj, moc, mocOri, foOri, flag;
+    int melFO = s.funObj;
+    while (true)
+    {
+        flag = 1;
+        for (int t = 0; t < iteracoes; t++)
+        {
+            foOri = s.funObj;
+            obj = rand() % pontos;
+            do
+                moc = rand() % (posicoes + 1) - 1;
+            while (moc == s.vetPosSel[obj]);
+            mocOri = s.vetPosSel[obj];
+            s.vetPosSel[obj] = moc;
+            calcularFO(s);
+            if (s.funObj > melFO)
+            {
+                melFO = s.funObj;
+                flag = 0;
+            }
+            else
+            {
+                s.vetPosSel[obj] = mocOri;
+                s.funObj = foOri;
+            }
+        }
+        if (flag)
+            break;
+    }
+    calcularFO(s);
+}
+
 void escreverSolucao(Solucao &s, string arq, const bool flag)
 {
     FILE *f;
@@ -175,7 +392,6 @@ void escreverSolucao(Solucao &s, string arq, const bool flag)
                 fprintf(f, "%d  ", s.vetPosSel[j]);
         }
         fprintf(f, "\n");
-       
     }
     else
     {
@@ -183,13 +399,9 @@ void escreverSolucao(Solucao &s, string arq, const bool flag)
         fprintf(f, "%d\n%d\n%d\n", pontos, posicoes, s.funObj);
         for (int j = 0; j < pontos; j++)
             fprintf(f, "%d\n", s.vetPosSel[j]);
-         fclose(f);  
+        fclose(f);
     }
-     
-   
 }
-
-
 
 void clonarSolucao(Solucao &original, Solucao &clone)
 {
@@ -202,6 +414,13 @@ void criarVetPosicoesCandidatas()
         vetPosicoesCandidatas[j] = (j + 1) % posicoes == 0 ? posicoes : (j + 1) % posicoes;
 }
 
+void criarVetAuxiliares()
+{
+    memcpy(&vetConflitosPosicaoOrd, &vetConflitosPosicao, sizeof(vetConflitosPosicao));
+    for (int j = 0; j < pontos * posicoes; j++)
+        vetIndPosicoesOrd[j] = j;
+}
+
 void bubbleSort()
 {
     double aux = 0;
@@ -210,16 +429,16 @@ void bubbleSort()
         for (int j = 0; j < (pontos * posicoes) - 1; j++)
         {
 
-            if (vetPesObjOrd[j] > vetPesObjOrd[j + 1])
+            if (vetConflitosPosicaoOrd[j] > vetConflitosPosicaoOrd[j + 1])
             {
 
-                auxiliar = vetIndObjOrd[j];
-                vetIndObjOrd[j] = vetIndObjOrd[j + 1];
-                vetIndObjOrd[j + 1] = auxiliar;
+                auxiliar = vetIndPosicoesOrd[j];
+                vetIndPosicoesOrd[j] = vetIndPosicoesOrd[j + 1];
+                vetIndPosicoesOrd[j + 1] = auxiliar;
 
-                aux = vetPesObjOrd[j];
-                vetPesObjOrd[j] = vetPesObjOrd[j + 1];
-                vetPesObjOrd[j + 1] = aux;
+                aux = vetConflitosPosicaoOrd[j];
+                vetConflitosPosicaoOrd[j] = vetConflitosPosicaoOrd[j + 1];
+                vetConflitosPosicaoOrd[j + 1] = aux;
             }
         }
     }
@@ -233,16 +452,16 @@ void selectionSort()
     {
         min = i;
         for (int j = i + 1; j < (pontos * posicoes); j++)
-            if (vetPesObjOrd[j] < vetPesObjOrd[min])
+            if (vetConflitosPosicaoOrd[j] < vetConflitosPosicaoOrd[min])
                 min = j;
 
-        aux = vetPesObjOrd[i];
-        vetPesObjOrd[i] = vetPesObjOrd[min];
-        vetPesObjOrd[min] = aux;
+        aux = vetConflitosPosicaoOrd[i];
+        vetConflitosPosicaoOrd[i] = vetConflitosPosicaoOrd[min];
+        vetConflitosPosicaoOrd[min] = aux;
 
-        auxiliar = vetIndObjOrd[i];
-        vetIndObjOrd[i] = vetIndObjOrd[min];
-        vetIndObjOrd[min] = auxiliar;
+        auxiliar = vetIndPosicoesOrd[i];
+        vetIndPosicoesOrd[i] = vetIndPosicoesOrd[min];
+        vetIndPosicoesOrd[min] = auxiliar;
     }
 }
 
@@ -252,17 +471,17 @@ void insertionSort()
     double peso;
     for (int i = 1; i < (pontos * posicoes); i++)
     {
-        peso = vetPesObjOrd[i];
-        key = vetIndObjOrd[i];
+        peso = vetConflitosPosicaoOrd[i];
+        key = vetIndPosicoesOrd[i];
         j = i - 1;
-        while (j >= 0 && vetPesObjOrd[j] > peso)
+        while (j >= 0 && vetConflitosPosicaoOrd[j] > peso)
         {
-            vetPesObjOrd[j + 1] = vetPesObjOrd[j];
-            vetIndObjOrd[j + 1] = vetIndObjOrd[j];
+            vetConflitosPosicaoOrd[j + 1] = vetConflitosPosicaoOrd[j];
+            vetIndPosicoesOrd[j + 1] = vetIndPosicoesOrd[j];
             j = j - 1;
         }
-        vetPesObjOrd[j + 1] = peso;
-        vetIndObjOrd[j + 1] = key;
+        vetConflitosPosicaoOrd[j + 1] = peso;
+        vetIndPosicoesOrd[j + 1] = key;
     }
 }
 
@@ -272,27 +491,27 @@ void quickSort(int left, int right)
     double x;
     i = left;
     j = right;
-    x = vetPesObjOrd[(left + right) / 2];
+    x = vetConflitosPosicaoOrd[(left + right) / 2];
 
     while (i <= j)
     {
-        while (vetPesObjOrd[i] < x && i < right)
+        while (vetConflitosPosicaoOrd[i] < x && i < right)
         {
             i++;
         }
-        while (vetPesObjOrd[j] > x && j > left)
+        while (vetConflitosPosicaoOrd[j] > x && j > left)
         {
             j--;
         }
         if (i <= j)
         {
-            y = vetIndObjOrd[i];
-            vetIndObjOrd[i] = vetIndObjOrd[j];
-            vetIndObjOrd[j] = y;
+            y = vetIndPosicoesOrd[i];
+            vetIndPosicoesOrd[i] = vetIndPosicoesOrd[j];
+            vetIndPosicoesOrd[j] = y;
 
-            x = vetPesObjOrd[i];
-            vetPesObjOrd[i] = vetPesObjOrd[j];
-            vetPesObjOrd[j] = x;
+            x = vetConflitosPosicaoOrd[i];
+            vetConflitosPosicaoOrd[i] = vetConflitosPosicaoOrd[j];
+            vetConflitosPosicaoOrd[j] = x;
 
             i++;
             j--;
@@ -316,7 +535,7 @@ void construtivaGulAle(SolucaoBIN &s, const int percentual)
     int tam, pos, aux;
     int vetAuxInd[MAX_OBJ];
 
-    memcpy(&vetAuxInd, &vetIndObjOrd, sizeof(vetIndObjOrd));
+    memcpy(&vetAuxInd, &vetIndPosicoesOrd, sizeof(vetIndPosicoesOrd));
 
     tam = MAX(1, (percentual / 100.0) * (pontos * posicoes));
     for (int j = 0; j < tam; j++)
