@@ -37,7 +37,7 @@ int main(int argc, const char *argv[])
         grasp(lrc, tempo_limite, s, melhor_tempo, tempo_total);
         
         FILE *f = fopen(saida.c_str(),"at");
-        fprintf(f, "%s\t%d\t\t%d\t%d\t%d\t%.5f\t\t%.5f\n", aux.c_str(), seed, s.funObj, s.conflitos, lrc, melhor_tempo, tempo_total);
+        fprintf(f, "%s\t%s\t%d\t\t%d\t%d\t%d\t%.5f\t\t%.5f\n", aux.c_str(), instancia, seed, s.funObj, s.conflitos, lrc, melhor_tempo, tempo_total);
         fclose(f);
     }
 
@@ -172,31 +172,23 @@ void construtivaGulosaAleatoria(Solucao &s, const int lrc)
     memset(&s.vetPosSel, 0, sizeof(s.vetPosSel));
     int flag = 0;
     int cont = 0;
-    int candidatos = 0;
-    int tam, pos, aux;
-    int vetAux[MAX_OBJ * MAX_MOC];
-    double aux1;
-    memcpy(&vetAux, &vetIndPosicoesOrd, sizeof(vetIndPosicoesOrd));
+    int tam, pos;
+  
+
     tam = MAX(1, (lrc / 100.0) * pontos);
     for (int j = 0; j < tam; j++)
     {
-        pos = j + rand() % (pontos - j);
-        aux = vetAux[pos];
-        vetAux[pos] = vetAux[j];
-        vetAux[j] = aux;
-
-        aux1 = vetConflitosPosicaoOrd[pos];
-        vetConflitosPosicaoOrd[pos] = vetConflitosPosicaoOrd[j];
-        vetConflitosPosicaoOrd[j] = aux1;
+        pos = rand() % pontos;
+        s.vetPosSel[pos] = 1 + (rand() % posicoes);
     }
 
     for (int i = 0; i < pontos * posicoes; i++)
     {
-        if (s.vetPosSel[vetAux[i] / posicoes] == 0 && vetAux[i] != -1)
+        if (s.vetPosSel[vetIndPosicoesOrd[i] / posicoes] == 0)
         {
-            for (int k = 0; k < vetConflitosPosicaoOrd[vetAux[i]]; k++)
+            for (int k = 0; k < vetConflitosPosicao[vetIndPosicoesOrd[i]]; k++)
             {
-                if (vetPosicoesCandidatas[matConflitoPontos[vetAux[i]][k] - 1] != s.vetPosSel[(matConflitoPontos[vetAux[i]][k] - 1) / posicoes])
+                if (vetPosicoesCandidatas[matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1] != s.vetPosSel[(matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1) / posicoes])
                 {
                     cont++;
                     flag = 1;
@@ -209,11 +201,9 @@ void construtivaGulosaAleatoria(Solucao &s, const int lrc)
                 }
             }
 
-            if (flag == 1 && cont == vetConflitosPosicaoOrd[vetAux[i]])
-            {
-                s.vetPosSel[vetAux[i] / posicoes] = vetPosicoesCandidatas[i];
-                candidatos++;
-            }
+            if (flag == 1 && cont == vetConflitosPosicao[vetIndPosicoesOrd[i]])
+                s.vetPosSel[vetIndPosicoesOrd[i] / posicoes] = vetPosicoesCandidatas[vetIndPosicoesOrd[i]];
+               
         }
         cont = 0;
         flag = 0;
@@ -233,23 +223,8 @@ void grasp(int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, do
     {
         construtivaGulosaAleatoria(s_vizinha, lrc);
         calcularFO(s_vizinha);
-        aux = rand() % 3;
-        switch (aux)
-        {
-        case 0:
-            heuBLPM(s_vizinha);
-            break;
-        case 1:
-            heuBLMM(s_vizinha);
-            break;
-        case 2:
-            heuBLRA(s_vizinha, 100);
-            break;
-        default:
-            heuBLPM(s_vizinha);
-            break;
-        }
-
+        heuBLRA(s_vizinha);
+           
         if (s_vizinha.funObj > s.funObj)
         {
             memcpy(&s, &s_vizinha, sizeof(s_vizinha));
@@ -458,7 +433,7 @@ void criarVetPosicoesCandidatas()
 
 void criarVetAuxiliares()
 {
-    memcpy(&vetConflitosPosicaoOrd, &vetConflitosPosicao, sizeof(vetConflitosPosicao));
+
     for (int j = 0; j < pontos * posicoes; j++)
         vetIndPosicoesOrd[j] = j;
 }

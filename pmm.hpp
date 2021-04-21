@@ -11,7 +11,7 @@ int matConflitoPontos[MAX_OBJ * MAX_MOC][200];
 int vetPosicoesCandidatas[MAX_OBJ * MAX_MOC];
 int vetIndPosicoesOrd[MAX_OBJ * MAX_MOC];
 int vetConflitosPosicao[MAX_OBJ * MAX_MOC];
-int vetConflitosPosicaoOrd[MAX_OBJ * MAX_MOC];
+
 
 typedef struct tSolucao
 {
