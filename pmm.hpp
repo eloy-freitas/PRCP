@@ -11,7 +11,7 @@ int matConflitoPontos[MAX_OBJ * MAX_MOC][200];
 int vetPosicoesCandidatas[MAX_OBJ * MAX_MOC];
 int vetIndPosicoesOrd[MAX_OBJ * MAX_MOC];
 int vetConflitosPosicao[MAX_OBJ * MAX_MOC];
-int vetConflitosPosicaoOrd[MAX_OBJ * MAX_MOC];
+
 
 typedef struct tSolucao
 {
@@ -43,7 +43,7 @@ void heuBLPM(Solucao &s);
 void heuBLMM(Solucao &s);
 void heuBLRA(Solucao &s, const int iteracoes);
 
-void grasp(const int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total);
+void grasp(int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total);
 #endif
 /*
 typedef struct tSolucaoBIN
