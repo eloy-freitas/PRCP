@@ -172,23 +172,25 @@ void construtivaGulosaAleatoria(Solucao &s, const int lrc)
     memset(&s.vetPosSel, 0, sizeof(s.vetPosSel));
     int flag = 0;
     int cont = 0;
-    int tam, pos;
-  
-
+    int tam, pos, aux;
+    int vetAux[MAX_MOC * MAX_OBJ];
+    memcpy(&vetAux, &vetIndPosicoesOrd, sizeof(vetIndPosicoesOrd));
     tam = MAX(1, (lrc / 100.0) * pontos);
     for (int j = 0; j < tam; j++)
     {
-        pos = rand() % pontos;
-        s.vetPosSel[pos] = 1 + (rand() % posicoes);
+        pos = rand() % (pontos * posicoes);
+        aux = vetAux[pos];
+        vetAux[pos] = vetAux[aux];
+        vetAux[aux] = pos;
     }
 
     for (int i = 0; i < pontos * posicoes; i++)
     {
-        if (s.vetPosSel[vetIndPosicoesOrd[i] / posicoes] == 0)
+        if (s.vetPosSel[vetAux[i] / posicoes] == 0)
         {
-            for (int k = 0; k < vetConflitosPosicao[vetIndPosicoesOrd[i]]; k++)
+            for (int k = 0; k < vetConflitosPosicao[vetAux[i]]; k++)
             {
-                if (vetPosicoesCandidatas[matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1] != s.vetPosSel[(matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1) / posicoes])
+                if (vetPosicoesCandidatas[matConflitoPontos[vetAux[i]][k] - 1] != s.vetPosSel[(matConflitoPontos[vetAux[i]][k] - 1) / posicoes])
                 {
                     cont++;
                     flag = 1;
@@ -201,9 +203,8 @@ void construtivaGulosaAleatoria(Solucao &s, const int lrc)
                 }
             }
 
-            if (flag == 1 && cont == vetConflitosPosicao[vetIndPosicoesOrd[i]])
-                s.vetPosSel[vetIndPosicoesOrd[i] / posicoes] = vetPosicoesCandidatas[vetIndPosicoesOrd[i]];
-               
+            if (flag == 1 && cont == vetConflitosPosicao[vetAux[i]])
+                s.vetPosSel[vetAux[i] / posicoes] = vetPosicoesCandidatas[vetAux[i]];
         }
         cont = 0;
         flag = 0;
