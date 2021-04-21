@@ -37,7 +37,7 @@ int main(int argc, const char *argv[])
         grasp(lrc, tempo_limite, s, melhor_tempo, tempo_total);
         
         FILE *f = fopen(saida.c_str(),"at");
-        fprintf(f, "%s\t%s\t%d\t\t%d\t%d\t%d\t%.5f\t\t%.5f\n", aux.c_str(), instancia, seed, s.funObj, s.conflitos, lrc, melhor_tempo, tempo_total);
+        fprintf(f, "%s\t%s\t%d\t\t%d\t%d\t%d\t%.5f\t\t%.5f\n", aux.c_str(), instancia.c_str(), seed, s.funObj, s.conflitos, lrc, melhor_tempo, tempo_total);
         fclose(f);
     }
 
@@ -138,7 +138,7 @@ void construtivaGulosa(Solucao &s)
     {
         if (s.vetPosSel[vetIndPosicoesOrd[i] / posicoes] == 0 && vetIndPosicoesOrd[i] != -1)
         {
-            for (int k = 0; k < vetConflitosPosicaoOrd[vetIndPosicoesOrd[i]]; k++)
+            for (int k = 0; k < vetConflitosPosicao[vetIndPosicoesOrd[i]]; k++)
             {
                 if (vetPosicoesCandidatas[matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1] != s.vetPosSel[(matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1) / posicoes])
                 {
@@ -153,9 +153,9 @@ void construtivaGulosa(Solucao &s)
                 }
             }
 
-            if (flag == 1 && cont == vetConflitosPosicaoOrd[vetIndPosicoesOrd[i]])
+            if (flag == 1 && cont == vetConflitosPosicao[vetIndPosicoesOrd[i]])
             {
-                for (int k = 0; k < vetConflitosPosicaoOrd[vetIndPosicoesOrd[i]]; k++)
+                for (int k = 0; k < vetConflitosPosicao[vetIndPosicoesOrd[i]]; k++)
                     vetIndPosicoesOrd[matConflitoPontos[vetIndPosicoesOrd[i]][k] - 1] = -1;
 
                 s.vetPosSel[vetIndPosicoesOrd[i] / posicoes] = vetPosicoesCandidatas[i];
@@ -223,7 +223,7 @@ void grasp(int lrc, const double tempo_max, Solucao &s, double &tempo_melhor, do
     {
         construtivaGulosaAleatoria(s_vizinha, lrc);
         calcularFO(s_vizinha);
-        heuBLRA(s_vizinha);
+        heuBLPM(s_vizinha);
            
         if (s_vizinha.funObj > s.funObj)
         {
@@ -446,16 +446,16 @@ void bubbleSort()
         for (int j = 0; j < (pontos * posicoes) - 1; j++)
         {
 
-            if (vetConflitosPosicaoOrd[j] > vetConflitosPosicaoOrd[j + 1])
+            if (vetConflitosPosicao[j] > vetConflitosPosicao[j + 1])
             {
 
                 auxiliar = vetIndPosicoesOrd[j];
                 vetIndPosicoesOrd[j] = vetIndPosicoesOrd[j + 1];
                 vetIndPosicoesOrd[j + 1] = auxiliar;
 
-                aux = vetConflitosPosicaoOrd[j];
-                vetConflitosPosicaoOrd[j] = vetConflitosPosicaoOrd[j + 1];
-                vetConflitosPosicaoOrd[j + 1] = aux;
+                aux = vetConflitosPosicao[j];
+                vetConflitosPosicao[j] = vetConflitosPosicao[j + 1];
+                vetConflitosPosicao[j + 1] = aux;
             }
         }
     }
@@ -469,12 +469,12 @@ void selectionSort()
     {
         min = i;
         for (int j = i + 1; j < (pontos * posicoes); j++)
-            if (vetConflitosPosicaoOrd[j] < vetConflitosPosicaoOrd[min])
+            if (vetConflitosPosicao[j] < vetConflitosPosicao[min])
                 min = j;
 
-        aux = vetConflitosPosicaoOrd[i];
-        vetConflitosPosicaoOrd[i] = vetConflitosPosicaoOrd[min];
-        vetConflitosPosicaoOrd[min] = aux;
+        aux = vetConflitosPosicao[i];
+        vetConflitosPosicao[i] = vetConflitosPosicao[min];
+        vetConflitosPosicao[min] = aux;
 
         auxiliar = vetIndPosicoesOrd[i];
         vetIndPosicoesOrd[i] = vetIndPosicoesOrd[min];
@@ -488,16 +488,16 @@ void insertionSort()
     double peso;
     for (int i = 1; i < (pontos * posicoes); i++)
     {
-        peso = vetConflitosPosicaoOrd[i];
+        peso = vetConflitosPosicao[i];
         key = vetIndPosicoesOrd[i];
         j = i - 1;
-        while (j >= 0 && vetConflitosPosicaoOrd[j] > peso)
+        while (j >= 0 && vetConflitosPosicao[j] > peso)
         {
-            vetConflitosPosicaoOrd[j + 1] = vetConflitosPosicaoOrd[j];
+            vetConflitosPosicao[j + 1] = vetConflitosPosicao[j];
             vetIndPosicoesOrd[j + 1] = vetIndPosicoesOrd[j];
             j = j - 1;
         }
-        vetConflitosPosicaoOrd[j + 1] = peso;
+        vetConflitosPosicao[j + 1] = peso;
         vetIndPosicoesOrd[j + 1] = key;
     }
 }
@@ -508,15 +508,15 @@ void quickSort(int left, int right)
     double x;
     i = left;
     j = right;
-    x = vetConflitosPosicaoOrd[(left + right) / 2];
+    x = vetConflitosPosicao[(left + right) / 2];
 
     while (i <= j)
     {
-        while (vetConflitosPosicaoOrd[i] < x && i < right)
+        while (vetConflitosPosicao[i] < x && i < right)
         {
             i++;
         }
-        while (vetConflitosPosicaoOrd[j] > x && j > left)
+        while (vetConflitosPosicao[j] > x && j > left)
         {
             j--;
         }
@@ -526,9 +526,9 @@ void quickSort(int left, int right)
             vetIndPosicoesOrd[i] = vetIndPosicoesOrd[j];
             vetIndPosicoesOrd[j] = y;
 
-            x = vetConflitosPosicaoOrd[i];
-            vetConflitosPosicaoOrd[i] = vetConflitosPosicaoOrd[j];
-            vetConflitosPosicaoOrd[j] = x;
+            x = vetConflitosPosicao[i];
+            vetConflitosPosicao[i] = vetConflitosPosicao[j];
+            vetConflitosPosicao[j] = x;
 
             i++;
             j--;
