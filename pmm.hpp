@@ -11,7 +11,7 @@ int matConflitoPontos[MAX_OBJ * MAX_MOC][200];
 int vetPosicoesCandidatas[MAX_OBJ * MAX_MOC];
 int vetIndPosicoesOrd[MAX_OBJ * MAX_MOC];
 int vetConflitosPosicao[MAX_OBJ * MAX_MOC];
-
+int vetPontosLivres[MAX_OBJ];
 
 typedef struct tSolucao
 {
@@ -29,7 +29,6 @@ void quickSort(int left, int right);
 void insertionSort();
 
 void criarVetAuxiliares();
-void criarVetPosicoesCandidatas();
 void clonarSolucao(Solucao &original, Solucao &clone);
 void lerSolucao(Solucao &s, std::string arq);
 
