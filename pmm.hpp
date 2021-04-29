@@ -12,6 +12,7 @@ int vetPosicoesCandidatas[MAX_OBJ * MAX_MOC];
 int vetIndPosicoesOrd[MAX_OBJ * MAX_MOC];
 int vetConflitosPosicao[MAX_OBJ * MAX_MOC];
 int vetPontosLivres[MAX_OBJ];
+int vetQtdConflitos[MAX_OBJ];
 
 typedef struct tSolucao
 {
@@ -37,6 +38,7 @@ void construtivaAleatoria(Solucao &s);
 void escreverSolucao(Solucao &s, std::string arq, const bool flag);
 void construtivaGulosa(Solucao &s);
 void construtivaGulosaAleatoria(Solucao &s, const int lrc);
+void corrigirSolucao(Solucao &s);
 
 void heuBLPM(Solucao &s);
 void heuBLMM(Solucao &s);
